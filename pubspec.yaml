@@ -14,10 +14,10 @@ dependencies:
 
   dio: 4.0.0
   th_logger:
-    path: ../th_logger
+    git: https://github.com/tuanhwing/th_logger.git
 
   th_dependencies:
-    path: ../th_dependencies
+    git: https://github.com/tuanhwing/th_dependencies.git
 
 dev_dependencies:
   flutter_test:
