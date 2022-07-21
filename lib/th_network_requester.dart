@@ -1,6 +1,7 @@
 
 import 'dart:async';
 
+import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:th_logger/th_logger.dart';
 import 'package:th_network/common/th_network_defines.dart';
@@ -42,6 +43,7 @@ class THNetworkRequester {
     _dio.options.baseUrl = baseURL;
     _dio.options.connectTimeout = connectTimeout;
     _dio.options.receiveTimeout = receiveTimeout;
+    _dio.interceptors.add(CurlLoggerDioInterceptor());
 
     //Instance to request the token.
     _tokenDio.options.baseUrl = baseURL;
