@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:th_dependencies/th_dependencies.dart';
-import 'package:th_network/network/network.dart';
 
 import 'package:th_network/th_network.dart';
 

@@ -4,7 +4,6 @@ import 'dart:async';
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:th_logger/th_logger.dart';
-import 'package:th_network/common/th_network_defines.dart';
 import 'package:th_dependencies/th_dependencies.dart' as th_dependencies;
 
 import 'network/network.dart';
@@ -18,14 +17,11 @@ class THNetworkRequester {
   // THNetworkRequester._internal();
 
   late THRequest? _request;
-  late String _refreshTokenPath;
   late String _authorizationPrefix;
   final Dio _tokenDio = Dio();
   final Dio _dio = Dio();
   final List<THNetworkListener> _listeners = [];
   final th_dependencies.FlutterSecureStorage storage;
-  Future<THResponse>? _refreshTokenFuture;
-  int _reSubmitterCount = 0;
 
   String? _token;
   String? _refreshToken;
@@ -34,9 +30,7 @@ class THNetworkRequester {
   THNetworkRequester(String baseURL, this.storage, {
     int connectTimeout=5000,
     int receiveTimeout=3000,
-    required String authorizationPrefix,
-    required String refreshTokenPath}) {
-    _refreshTokenPath = refreshTokenPath;
+    required String authorizationPrefix}) {
     _authorizationPrefix = authorizationPrefix;
 
     //Options
@@ -50,34 +44,6 @@ class THNetworkRequester {
     _tokenDio.options.connectTimeout = connectTimeout;
     _tokenDio.options.receiveTimeout = receiveTimeout;
 
-    _tokenDio.interceptors.add(InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.headers['Authorization'] = "$_authorizationPrefix $_refreshToken";
-          return handler.next(options);
-        },
-        onResponse: (response, handler) {
-          THLogger().d("[REFRESH_TOKEN]REQUEST\nmethod: ${response.requestOptions.method}\n"
-              "path: ${response.requestOptions.path}\nheaders:${response.requestOptions.headers}\n"
-              "RESPONSE\nstatusCode: ${response.statusCode}\ndata: ${response.data}");
-
-          //Update new token
-          setToken(response.data['data']['token'], response.data['data']['refresh_token']);
-          _dio.interceptors.requestLock.unlock();
-          return handler.next(response);
-        },
-        onError: (DioError error, handler) {
-          THLogger().d("[REFRESH_TOKEN]DioError\ntype: ${error.type}\nmessage: ${error.message}\n\n"
-              "RESPONSE\nstatusCode: ${error.response?.statusCode}\ndata: ${error.response?.data}");
-          _dio.interceptors.requestLock.clear();
-          if (error.response?.statusCode == 401) {//Session expired
-            _notifyListeners();
-          }
-          return handler.next(error);
-        }
-    ));
-
-
-    //Instance to request network.
     _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
           options.headers['Authorization'] = "$_authorizationPrefix $_token";
@@ -103,12 +69,12 @@ class THNetworkRequester {
     _request = THRequest(_dio);
   }
 
-  ///Notify all listeners
-  void _notifyListeners() {
-    for (var element in _listeners) {
-      element.sessionExpired();
-    }
-  }
+  // ///Notify all listeners
+  // void _notifyListeners() {
+  //   for (var element in _listeners) {
+  //     element.sessionExpired();
+  //   }
+  // }
 
   ///Initializes [THNetworkRequester] instance
   Future<void> initialize() async {
@@ -147,20 +113,6 @@ class THNetworkRequester {
     return thResponse;
   }
 
-  Future<THResponse<T>> _fetchNewToken<T>() async {
-    try {
-      final response = await _tokenDio.get(_refreshTokenPath);
-      return THResponse<T>.fromJson(response);
-    }
-    on DioError catch (error) {
-      return THResponse<T>.fromJson(error.response!);
-    }
-    catch(exception) {
-      THLogger().e(exception.toString());
-      return THResponse.somethingWentWrong();
-    }
-  }
-
 
   ///Set token
   Future setToken(String token, String refreshToken) async {
@@ -196,25 +148,6 @@ class THNetworkRequester {
 
 
     THResponse<T> thResponse = await _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
-
-    if (thResponse.statusCode == 401) {//Unauthorized
-      _reSubmitterCount++;//Increment request count to resubmit
-      _dio.lock();
-      _refreshTokenFuture ??= _fetchNewToken();
-
-      THResponse response = await _refreshTokenFuture!;
-      if (response.statusCode == 200) {
-        _reSubmitterCount--;//Decrement request count to resubmit
-        if (_reSubmitterCount == 0) {
-          _refreshTokenFuture = null;
-        }
-        thResponse = await _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
-      }
-      else {
-        thResponse = response.clone<T>();
-      }
-
-    }
     return thResponse;
   }
 }
