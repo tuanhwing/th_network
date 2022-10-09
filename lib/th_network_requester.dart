@@ -156,6 +156,7 @@ class THNetworkRequester {
       _refreshTokenFuture ??= _refreshTokenRequest!.get(_refreshTokenPath);
       THResponse<Map<String, dynamic>> _refreshTokenResponse = await _refreshTokenFuture!;
 
+      _refreshTokenFuture = null;
       Map<String, dynamic>? refreshTokenData = _refreshTokenResponse.data;
       if (_refreshTokenResponse.code == 200 &&
           refreshTokenData != null &&
