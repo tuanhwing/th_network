@@ -9,7 +9,7 @@ void main() {
   THNetworkRequester _requester;
 
   setUp(() {
-    _requesterFuture = THNetwork.getInstance("http://myapi-dev.com.vn", const FlutterSecureStorage());
+    _requesterFuture = THNetwork.getInstance("http://myapi-dev.com.vn", const FlutterSecureStorage(), refreshTokenPath: '');
   });
 
   test('get', () async {
@@ -36,7 +36,7 @@ void main() {
           "device" : deviceInfo
         }
     );
-    expect(response.code, 0);
-    expect(response.statusCode, 200);
+    expect(response.code, 200);
+    expect(response.status, true);
   });
 }

@@ -11,13 +11,15 @@ class THNetwork {
   static Future<THNetworkRequester> getInstance(String baseURL, FlutterSecureStorage storage, {
     int connectTimeout=5000,
     int receiveTimeout=3000,
-    String? authorizationPrefix}) async {
+    String? authorizationPrefix,
+    required String refreshTokenPath}) async {
     THNetworkRequester requester = THNetworkRequester(
       baseURL,
       storage,
       connectTimeout: connectTimeout,
       receiveTimeout: receiveTimeout,
-      authorizationPrefix: authorizationPrefix ?? "Bearer",
+      authorizationPrefix: authorizationPrefix ?? '',
+      refreshTokenPath: refreshTokenPath,
     );
 
     await requester.initialize();
