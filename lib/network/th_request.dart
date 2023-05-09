@@ -7,7 +7,7 @@ import 'package:th_dependencies/th_dependencies.dart' as th_dependencies;
 import 'th_response.dart';
 
 class THRequest {
-  THRequest( this._dioClient);
+  THRequest(this._dioClient);
   final Dio _dioClient;
 
   ///Handling errors

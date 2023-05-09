@@ -47,12 +47,13 @@ class THNetworkRequester {
     _dio.options.baseUrl = baseURL;
     _dio.options.connectTimeout = connectTimeout;
     _dio.options.receiveTimeout = receiveTimeout;
-    _dio.interceptors.add(CurlLoggerDioInterceptor());
+    _dio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
 
     //Instance to request the token.
     _tokenDio.options.baseUrl = baseURL;
     _tokenDio.options.connectTimeout = connectTimeout;
     _tokenDio.options.receiveTimeout = receiveTimeout;
+    _tokenDio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
 
     _tokenDio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
@@ -61,17 +62,12 @@ class THNetworkRequester {
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        THLogger().d("[RefreshToken] REQUEST\nmethod: ${response.requestOptions.method}\n"
-            "path: ${response.requestOptions.path}\nheaders:${response.requestOptions.headers}\n"
-            "queryParameters: ${response.requestOptions.queryParameters}\ndata: ${response.requestOptions.data}\n\n\n"
-            "RESPONSE\nstatusCode: ${response.statusCode}\ndata: ${response.data}");
+        THLogger().d("RESPONSE\nstatusCode: ${response.statusCode}\ndata: ${response.data}");
 
         return handler.next(response);
       },
       onError: (DioError error, handler) {
         THLogger().d("[RefreshToken] DioError\ntype: ${error.type}\nmessage: ${error.message}\n\n"
-            "REQUEST\npath: ${error.requestOptions.path}\nheaders:${error.requestOptions.headers}"
-            "queryParameters: ${error.requestOptions.queryParameters}\ndata: ${error.requestOptions.data}\n\n "
             "RESPONSE\nstatusCode: ${error.response?.statusCode}\ndata: ${error.response?.data}");
 
         return handler.next(error);
@@ -85,17 +81,13 @@ class THNetworkRequester {
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          THLogger().d("REQUEST\nmethod: ${response.requestOptions.method}\n"
-              "path: ${response.requestOptions.path}\nheaders:${response.requestOptions.headers}\n"
-              "queryParameters: ${response.requestOptions.queryParameters}\ndata: ${response.requestOptions.data}\n\n\n"
-              "RESPONSE\nstatusCode: ${response.statusCode}\ndata: ${response.data}");
+          THLogger().d("RESPONSE\nstatusCode: ${response.statusCode}\ndata: ${response.data}");
 
           return handler.next(response);
         },
         onError: (DioError error, handler) {
           THLogger().d("DioError\ntype: ${error.type}\nmessage: ${error.message}\n\n"
-              "REQUEST\npath: ${error.requestOptions.path}\nheaders:${error.requestOptions.headers}"
-              "queryParameters: ${error.requestOptions.queryParameters}\ndata: ${error.requestOptions.data}\n\n "
+              "REQUEST\npath: ${error.requestOptions.uri}\n"
               "RESPONSE\nstatusCode: ${error.response?.statusCode}\ndata: ${error.response?.data}");
 
           return handler.next(error);
