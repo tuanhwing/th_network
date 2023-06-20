@@ -1,5 +1,6 @@
 
 import 'dart:async';
+import 'dart:html';
 
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:dio/dio.dart';
@@ -144,13 +145,13 @@ class THNetworkRequester {
         break;
     }
 
-    if (thResponse.code == 401) {
-      _refreshTokenFuture ??= _refreshTokenRequest!.get(_refreshTokenPath);
+    if (thResponse.code == HttpStatus.unauthorized) {
+      _refreshTokenFuture ??= _refreshTokenRequest!.post(_refreshTokenPath);
       THResponse<Map<String, dynamic>> _refreshTokenResponse = await _refreshTokenFuture!;
 
       _refreshTokenFuture = null;
       Map<String, dynamic>? refreshTokenData = _refreshTokenResponse.data;
-      if (_refreshTokenResponse.code == 200 &&
+      if (_refreshTokenResponse.code == HttpStatus.ok &&
           refreshTokenData != null &&
           refreshTokenData['access_token'] != null &&
           refreshTokenData['refresh_token'] != null) {
