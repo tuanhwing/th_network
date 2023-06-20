@@ -1,6 +1,6 @@
 
 import 'dart:async';
-import 'dart:html';
+import 'dart:io';
 
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:dio/dio.dart';
