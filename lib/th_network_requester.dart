@@ -77,7 +77,7 @@ class THNetworkRequester {
 
     _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
-          options.headers['Authorization'] = "$_authorizationPrefix $_token";
+          options.headers['Authorization'] = "Bearer $_authorizationPrefix $_token";
           options.headers['Accept-Language'] = languageCode;
           return handler.next(options);
         },
