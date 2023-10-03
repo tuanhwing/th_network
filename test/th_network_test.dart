@@ -5,21 +5,21 @@ import 'package:th_network/th_network.dart';
 
 void main() {
 
-  Future<THNetworkRequester>? _requesterFuture;
-  THNetworkRequester _requester;
+  Future<THNetworkRequester>? requesterFuture;
+  THNetworkRequester requester;
 
   setUp(() {
-    _requesterFuture = THNetwork.getInstance("http://myapi-dev.com.vn", const FlutterSecureStorage(), refreshTokenPath: '');
+    requesterFuture = THNetwork.getInstance("http://myapi-dev.com.vn", const FlutterSecureStorage(), refreshTokenPath: '');
   });
 
   test('get', () async {
-    _requester = await _requesterFuture!;
-    THResponse response = await _requester.executeRequest(THRequestMethods.get, "/front/api/v1/settings/", queryParameters: {"attr_name": "Contact"});
+    requester = await requesterFuture!;
+    THResponse response = await requester.executeRequest(THRequestMethods.get, "/front/api/v1/settings/", queryParameters: {"attr_name": "Contact"});
     expect(response.code, 0);
   });
 
   test('post', () async {
-    _requester = await _requesterFuture!;
+    requester = await requesterFuture!;
     final deviceInfo = {
       "device_code" : "device_code",
       'device_model': "deviceModel",
@@ -27,7 +27,7 @@ void main() {
       'os_version': "osVersion",
       'app_version': "app_version"
     };
-    THResponse response = await _requester.executeRequest(
+    THResponse response = await requester.executeRequest(
         THRequestMethods.post,
         "/front/api/v1/user/login",
         data: {

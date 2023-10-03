@@ -147,18 +147,18 @@ class THNetworkRequester {
 
     if (thResponse.code == HttpStatus.unauthorized) {
       _refreshTokenFuture ??= _refreshTokenRequest!.post(_refreshTokenPath);
-      THResponse<Map<String, dynamic>> _refreshTokenResponse = await _refreshTokenFuture!;
+      THResponse<Map<String, dynamic>> refreshTokenResponse = await _refreshTokenFuture!;
 
       _refreshTokenFuture = null;
-      Map<String, dynamic>? refreshTokenData = _refreshTokenResponse.data;
-      if (_refreshTokenResponse.code == HttpStatus.ok &&
+      Map<String, dynamic>? refreshTokenData = refreshTokenResponse.data;
+      if (refreshTokenResponse.code == HttpStatus.ok &&
           refreshTokenData != null &&
           refreshTokenData['access_token'] != null &&
           refreshTokenData['refresh_token'] != null) {
-        setToken(_refreshTokenResponse.data?['access_token'], _refreshTokenResponse.data?['refresh_token']);
+        setToken(refreshTokenResponse.data?['access_token'], refreshTokenResponse.data?['refresh_token']);
         return _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
       }
-      _notifyListeners();
+      if (refreshTokenResponse.code == HttpStatus.unauthorized) _notifyListeners();
       return thResponse;
     }
     
