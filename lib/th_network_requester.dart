@@ -34,6 +34,7 @@ class THNetworkRequester {
   String? _token;
   String? _refreshToken;
   String? get token => _token;
+  String? get baseUrl => _dio.options.baseUrl;
 
   THNetworkRequester(String baseURL, this.storage, {
     int connectTimeout=5000,
