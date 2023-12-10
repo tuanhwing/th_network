@@ -3,7 +3,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:th_logger/th_logger.dart';
 import 'package:th_dependencies/th_dependencies.dart' as th_dependencies;
 
@@ -26,6 +28,7 @@ class THNetworkRequester {
   final List<THNetworkListener> _listeners = [];
   final th_dependencies.FlutterSecureStorage storage;
   late final th_dependencies.SharedPreferences _prefs;
+  late Map<String, dynamic>? _deviceInfo;
 
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
@@ -35,6 +38,7 @@ class THNetworkRequester {
   String? _refreshToken;
   String? get token => _token;
   String? get baseUrl => _dio.options.baseUrl;
+  Map<String, dynamic>? get deviceInfo => _deviceInfo;
 
   THNetworkRequester(String baseURL, this.storage, {
     int connectTimeout=5000,
@@ -44,6 +48,9 @@ class THNetworkRequester {
     _authorizationPrefix = authorizationPrefix;
     _refreshTokenPath = refreshTokenPath;
     _prefs = th_dependencies.GetIt.I.get<th_dependencies.SharedPreferences>();
+
+    //Initial device info
+    _initializationDeviceInfo();
 
     //Options
     _dio.options.baseUrl = baseURL;
@@ -61,6 +68,7 @@ class THNetworkRequester {
       onRequest: (options, handler) {
         options.headers['Authorization'] = "$_authorizationPrefix $_refreshToken";
         options.headers['Accept-Language'] = languageCode;
+        options.headers["Device-Info"] = _deviceInfo;
         return handler.next(options);
       },
       onResponse: (response, handler) {
@@ -80,6 +88,7 @@ class THNetworkRequester {
         onRequest: (options, handler) {
           options.headers['Authorization'] = "Bearer $_authorizationPrefix $_token";
           options.headers['Accept-Language'] = languageCode;
+          options.headers["Device-Info"] = _deviceInfo;
           return handler.next(options);
         },
         onResponse: (response, handler) {
@@ -98,6 +107,37 @@ class THNetworkRequester {
 
     _request = THRequest(_dio);
     _refreshTokenRequest = THRequest(_tokenDio);
+  }
+
+  void _initializationDeviceInfo() async {
+    DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+
+    String? deviceModel;
+    String? osVersion;
+    String? osName;
+    String? uuid;
+    if (Platform.isIOS) {
+      IosDeviceInfo iosDeviceInfo = await deviceInfoPlugin.iosInfo;
+      deviceModel = iosDeviceInfo.model;
+      osVersion = iosDeviceInfo.systemVersion;
+      uuid = iosDeviceInfo.identifierForVendor;// unique ID on iOS
+      osName = 'iOS';
+    } else if (Platform.isAndroid) {
+      AndroidDeviceInfo androidDeviceInfo = await deviceInfoPlugin.androidInfo;
+      deviceModel = androidDeviceInfo.model;
+      osVersion = '${androidDeviceInfo.version.sdkInt}';
+      uuid = androidDeviceInfo.id;// unique ID on Android
+      osName = 'Android';
+    }
+
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    _deviceInfo = <String, dynamic>{
+      'device_code': uuid,
+      'device_model': deviceModel,
+      'os_name': osName,
+      'os_version': osVersion,
+      'app_version': '${packageInfo.version}+${packageInfo.buildNumber}'
+    };
   }
 
   ///Notify all listeners
