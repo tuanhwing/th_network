@@ -1,6 +1,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -65,7 +66,7 @@ class THNetworkRequester {
       onRequest: (options, handler) {
         options.headers['Authorization'] = "$_authorizationPrefix $_refreshToken";
         options.headers['Accept-Language'] = languageCode;
-        options.headers["Device-Info"] = _deviceInfo;
+        options.headers["Device-Info"] = json.encode(_deviceInfo);
         return handler.next(options);
       },
       onResponse: (response, handler) {
@@ -85,7 +86,7 @@ class THNetworkRequester {
         onRequest: (options, handler) {
           options.headers['Authorization'] = "Bearer $_authorizationPrefix $_token";
           options.headers['Accept-Language'] = languageCode;
-          options.headers["Device-Info"] = _deviceInfo;
+          options.headers["Device-Info"] = json.encode(_deviceInfo);
           return handler.next(options);
         },
         onResponse: (response, handler) {
