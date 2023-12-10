@@ -28,7 +28,7 @@ class THNetworkRequester {
   final List<THNetworkListener> _listeners = [];
   final th_dependencies.FlutterSecureStorage storage;
   late final th_dependencies.SharedPreferences _prefs;
-  late Map<String, dynamic>? _deviceInfo;
+  Map<String, dynamic>? _deviceInfo;
 
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
@@ -48,9 +48,6 @@ class THNetworkRequester {
     _authorizationPrefix = authorizationPrefix;
     _refreshTokenPath = refreshTokenPath;
     _prefs = th_dependencies.GetIt.I.get<th_dependencies.SharedPreferences>();
-
-    //Initial device info
-    _initializationDeviceInfo();
 
     //Options
     _dio.options.baseUrl = baseURL;
@@ -109,7 +106,7 @@ class THNetworkRequester {
     _refreshTokenRequest = THRequest(_tokenDio);
   }
 
-  void _initializationDeviceInfo() async {
+  Future<void> _initializationDeviceInfo() async {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
 
     String? deviceModel;
@@ -158,6 +155,9 @@ class THNetworkRequester {
     //Read token value
     _token = await storage.read(key: THNetworkDefines.tokenKey);
     _refreshToken = await storage.read(key: THNetworkDefines.refreshTokenKey);
+
+    //Initialize device info
+    await _initializationDeviceInfo();
   }
 
   ///Fetch request
