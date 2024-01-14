@@ -51,7 +51,7 @@ class THRequest {
     return result;
   }
 
-  /// Handy method to make http GET request
+  /// Handle method to make http GET request
   Future<THResponse<T>> get<T>(String path, {Map<String, dynamic>? queryParameters = const {}, Options? options, CancelToken? cancelToken}) async {
     try {
       final response = await _dioClient.get(path, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
@@ -66,7 +66,7 @@ class THRequest {
     }
   }
 
-  /// Handy method to make http POST request
+  /// Handle method to make http POST request
   Future<THResponse<T>> post<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters = const {}, Options? options, CancelToken? cancelToken}) async {
     try {
       final response = await _dioClient.post(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
@@ -81,7 +81,7 @@ class THRequest {
     }
   }
 
-  /// Handy method to make http PUT request
+  /// Handle method to make http PUT request
   Future<THResponse<T>> put<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters = const {}, Options? options, CancelToken? cancelToken}) async {
     try {
       final response = await _dioClient.put(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
@@ -96,7 +96,7 @@ class THRequest {
     }
   }
 
-  /// Handy method to make http DELETE request
+  /// Handle method to make http DELETE request
   Future<THResponse<T>> delete<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters = const {}, Options? options, CancelToken? cancelToken}) async {
     try {
       final response = await _dioClient.delete(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
@@ -111,7 +111,7 @@ class THRequest {
     }
   }
 
-  /// Handy method to make http PATCH request
+  /// Handle method to make http PATCH request
   Future<THResponse<T>> patch<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters = const {}, Options? options, CancelToken? cancelToken}) async {
     try {
       final response = await _dioClient.patch(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);

@@ -30,6 +30,7 @@ class THNetworkRequester {
   final th_dependencies.FlutterSecureStorage storage;
   late final th_dependencies.SharedPreferences _prefs;
   Map<String, dynamic>? _deviceInfo;
+  String? _baseUrl;
 
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
@@ -38,8 +39,10 @@ class THNetworkRequester {
   String? _token;
   String? _refreshToken;
   String? get token => _token;
-  String? get baseUrl => _dio.options.baseUrl;
+  String? get baseUrl => _baseUrl;
   Map<String, dynamic>? get deviceInfo => _deviceInfo;
+
+  String get _tokenPrefix => _authorizationPrefix.isNotEmpty ? '${_authorizationPrefix.trim()} ' : '';
 
   THNetworkRequester(String baseURL, this.storage, {
     int connectTimeout=5000,
@@ -51,7 +54,8 @@ class THNetworkRequester {
     _prefs = th_dependencies.GetIt.I.get<th_dependencies.SharedPreferences>();
 
     //Options
-    _dio.options.baseUrl = baseURL;
+    _baseUrl = baseURL;
+    // _dio.options.baseUrl = baseURL;
     _dio.options.connectTimeout = connectTimeout;
     _dio.options.receiveTimeout = receiveTimeout;
     _dio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
@@ -64,7 +68,7 @@ class THNetworkRequester {
 
     _tokenDio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        options.headers['Authorization'] = "$_authorizationPrefix $_refreshToken";
+        options.headers['Authorization'] = "$_tokenPrefix$_refreshToken";
         options.headers['Accept-Language'] = languageCode;
         options.headers["Device-Info"] = json.encode(_deviceInfo);
         return handler.next(options);
@@ -84,7 +88,7 @@ class THNetworkRequester {
 
     _dio.interceptors.add(InterceptorsWrapper(
         onRequest: (options, handler) {
-          options.headers['Authorization'] = "Bearer $_authorizationPrefix $_token";
+          options.headers['Authorization'] = "$_tokenPrefix$_token";
           options.headers['Accept-Language'] = languageCode;
           options.headers["Device-Info"] = json.encode(_deviceInfo);
           return handler.next(options);
@@ -234,16 +238,23 @@ class THNetworkRequester {
   void removeListener(THNetworkListener listener) => _listeners.remove(listener);
 
   ///Perform network request
+  ///
+  /// [queryParameters] query parameters
+  /// [data] data
+  /// [options] Every request can pass an [Options] object which will be merged with [Dio.options]
+  /// [baseUrl] used when you want change baseUrl
   Future<THResponse<T>> executeRequest<T>(
       THRequestMethods method,
       String path, {
         Map<String, dynamic>? queryParameters,
         dynamic data,
-        Options? options
+        Options? options,
+        String? baseUrl,
       }) async {
 
 
-    THResponse<T> thResponse = await _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
+    final String url = baseUrl != null ? '$baseUrl$path' : '${_baseUrl ?? ''}$path';
+    THResponse<T> thResponse = await _fetch(method, url, queryParameters: queryParameters, data: data, options: options);
     return thResponse;
   }
 }
