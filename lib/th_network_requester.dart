@@ -20,10 +20,11 @@ class THNetworkRequester {
   // }
   // THNetworkRequester._internal();
 
-  late THRequest? _request;
-  late THRequest? _refreshTokenRequest;
+  late THRequest _request;
+  late THRequest _refreshTokenRequest;
   late String _authorizationPrefix;
   late String _refreshTokenPath;
+  late String _logoutPath;
   final Dio _tokenDio = Dio();
   final Dio _dio = Dio();
   final List<THNetworkListener> _listeners = [];
@@ -31,6 +32,7 @@ class THNetworkRequester {
   late final th_dependencies.SharedPreferences _prefs;
   Map<String, dynamic>? _deviceInfo;
   String? _baseUrl;
+  Timer? _debounce;
 
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
@@ -47,6 +49,7 @@ class THNetworkRequester {
   THNetworkRequester(String baseURL, this.storage, {
     int connectTimeout=5000,
     int receiveTimeout=3000,
+    required String logoutPath,
     required String authorizationPrefix,
     required String refreshTokenPath}) {
     _authorizationPrefix = authorizationPrefix;
@@ -55,6 +58,7 @@ class THNetworkRequester {
 
     //Options
     _baseUrl = baseURL;
+    _logoutPath = logoutPath;
     // _dio.options.baseUrl = baseURL;
     _dio.options.connectTimeout = connectTimeout;
     _dio.options.receiveTimeout = receiveTimeout;
@@ -175,36 +179,42 @@ class THNetworkRequester {
     THResponse<T> thResponse = THResponse.somethingWentWrong();
     switch(method) {
       case THRequestMethods.get:
-        thResponse = await _request!.get(path, queryParameters: queryParameters, options: options);
+        thResponse = await _request.get(path, queryParameters: queryParameters, options: options);
         break;
       case THRequestMethods.post:
-        thResponse = await _request!.post(path, data: data, queryParameters: queryParameters, options: options);
+        thResponse = await _request.post(path, data: data, queryParameters: queryParameters, options: options);
         break;
       case THRequestMethods.put:
-        thResponse = await _request!.put(path, data: data, queryParameters: queryParameters, options: options);
+        thResponse = await _request.put(path, data: data, queryParameters: queryParameters, options: options);
         break;
       case THRequestMethods.delete:
-        thResponse = await _request!.delete(path, data: data, queryParameters: queryParameters, options: options);
+        thResponse = await _request.delete(path, data: data, queryParameters: queryParameters, options: options);
         break;
       case THRequestMethods.patch:
-        thResponse = await _request!.patch(path, data: data, queryParameters: queryParameters, options: options);
+        thResponse = await _request.patch(path, data: data, queryParameters: queryParameters, options: options);
         break;
     }
 
-    if (thResponse.code == HttpStatus.unauthorized) {
-      _refreshTokenFuture ??= _refreshTokenRequest!.post(_refreshTokenPath);
+    print ('[TUANHY] _fetch $path $_logoutPath ${thResponse.code}');
+    if (thResponse.code == HttpStatus.unauthorized && !path.endsWith(_logoutPath)) {
+      _refreshTokenFuture ??= _refreshTokenRequest.post(_refreshTokenPath);
       THResponse<Map<String, dynamic>> refreshTokenResponse = await _refreshTokenFuture!;
 
-      _refreshTokenFuture = null;
       Map<String, dynamic>? refreshTokenData = refreshTokenResponse.data;
       if (refreshTokenResponse.code == HttpStatus.ok &&
           refreshTokenData != null &&
           refreshTokenData['access_token'] != null &&
           refreshTokenData['refresh_token'] != null) {
+        _refreshTokenFuture = null;
         setToken(refreshTokenResponse.data?['access_token'], refreshTokenResponse.data?['refresh_token']);
         return _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
       }
-      if (refreshTokenResponse.code == HttpStatus.unauthorized) _notifyListeners();
+      if (refreshTokenResponse.code == HttpStatus.unauthorized) {
+        if (_debounce?.isActive ?? false) _debounce?.cancel();
+        _debounce = Timer(const Duration(seconds: 1), () {
+          _notifyListeners();
+        });
+      }
       return thResponse;
     }
     

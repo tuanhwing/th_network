@@ -12,6 +12,7 @@ class THNetwork {
     int connectTimeout=5000,
     int receiveTimeout=3000,
     String? authorizationPrefix,
+    required String logoutPath,
     required String refreshTokenPath}) async {
     THNetworkRequester requester = THNetworkRequester(
       baseURL,
@@ -19,6 +20,7 @@ class THNetwork {
       connectTimeout: connectTimeout,
       receiveTimeout: receiveTimeout,
       authorizationPrefix: authorizationPrefix ?? '',
+      logoutPath: logoutPath,
       refreshTokenPath: refreshTokenPath,
     );
 
