@@ -195,7 +195,6 @@ class THNetworkRequester {
         break;
     }
 
-    print ('[TUANHY] _fetch $path $_logoutPath ${thResponse.code}');
     if (thResponse.code == HttpStatus.unauthorized && !path.endsWith(_logoutPath)) {
       _refreshTokenFuture ??= _refreshTokenRequest.post(_refreshTokenPath);
       THResponse<Map<String, dynamic>> refreshTokenResponse = await _refreshTokenFuture!;
