@@ -204,7 +204,9 @@ class THNetworkRequester {
           refreshTokenData != null &&
           refreshTokenData['access_token'] != null &&
           refreshTokenData['refresh_token'] != null) {
-        _refreshTokenFuture = null;
+        Future<void>.delayed(const Duration(seconds: 2), () {
+          _refreshTokenFuture = null;
+        });
         setToken(refreshTokenResponse.data?['access_token'], refreshTokenResponse.data?['refresh_token']);
         return _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
       }
@@ -214,6 +216,7 @@ class THNetworkRequester {
           _notifyListeners();
         });
       }
+      _refreshTokenFuture = null;
       return thResponse;
     }
     
