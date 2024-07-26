@@ -32,8 +32,10 @@ class THNetworkRequester {
   late final th_dependencies.SharedPreferences _prefs;
   Map<String, dynamic>? _deviceInfo;
   String? _baseUrl;
-  Timer? _debounce;
+  Timer? _notifyListenerDebounce;
 
+  Timer? _refreshFutureDebounce;
+  Completer? _refreshTokenCompleter;
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
   String languageCode = 'en';
@@ -153,6 +155,13 @@ class THNetworkRequester {
     }
   }
 
+  void _resetRefreshTokenFutureAfterFewSeconds() async {
+    if (_refreshFutureDebounce?.isActive ?? false) _refreshFutureDebounce?.cancel();
+    _refreshFutureDebounce = Timer(const Duration(seconds: 2), () {
+      _refreshTokenFuture = null;
+    });
+  }
+
   ///Initializes [THNetworkRequester] instance
   Future<void> initialize() async {
     //Check first running application
@@ -196,28 +205,37 @@ class THNetworkRequester {
     }
 
     if (thResponse.code == HttpStatus.unauthorized && !path.endsWith(_logoutPath)) {
-      _refreshTokenFuture ??= _refreshTokenRequest.post(_refreshTokenPath);
-      THResponse<Map<String, dynamic>> refreshTokenResponse = await _refreshTokenFuture!;
+      try {
+        if (_refreshTokenCompleter != null) {
+          await _refreshTokenCompleter?.future;
+        } else {
+          _refreshTokenCompleter = Completer();
+        }
+        _refreshTokenFuture ??= _refreshTokenRequest.post(_refreshTokenPath);
+        THResponse<Map<String, dynamic>> refreshTokenResponse = await _refreshTokenFuture!;
 
-      Map<String, dynamic>? refreshTokenData = refreshTokenResponse.data;
-      if (refreshTokenResponse.code == HttpStatus.ok &&
-          refreshTokenData != null &&
-          refreshTokenData['access_token'] != null &&
-          refreshTokenData['refresh_token'] != null) {
-        Future<void>.delayed(const Duration(seconds: 2), () {
-          _refreshTokenFuture = null;
-        });
-        setToken(refreshTokenResponse.data?['access_token'], refreshTokenResponse.data?['refresh_token']);
-        return _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
+        if (_refreshTokenCompleter?.isCompleted == false) {
+          _refreshTokenCompleter?.complete();
+        }
+        _resetRefreshTokenFutureAfterFewSeconds();
+        Map<String, dynamic>? refreshTokenData = refreshTokenResponse.data;
+        if (refreshTokenResponse.code == HttpStatus.ok &&
+            refreshTokenData != null &&
+            refreshTokenData['access_token'] != null &&
+            refreshTokenData['refresh_token'] != null) {
+          setToken(refreshTokenResponse.data?['access_token'], refreshTokenResponse.data?['refresh_token']);
+          return _fetch(method, path, queryParameters: queryParameters, data: data, options: options);
+        }
+        if (refreshTokenResponse.code == HttpStatus.unauthorized) {
+          if (_notifyListenerDebounce?.isActive ?? false) _notifyListenerDebounce?.cancel();
+          _notifyListenerDebounce = Timer(const Duration(seconds: 1), () {
+            _notifyListeners();
+          });
+        }
+        return thResponse;
+      } catch (exception) {
+        THLogger().e(exception.toString());
       }
-      if (refreshTokenResponse.code == HttpStatus.unauthorized) {
-        if (_debounce?.isActive ?? false) _debounce?.cancel();
-        _debounce = Timer(const Duration(seconds: 1), () {
-          _notifyListeners();
-        });
-      }
-      _refreshTokenFuture = null;
-      return thResponse;
     }
     
     return thResponse;
