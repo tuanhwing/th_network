@@ -144,7 +144,9 @@ class THNetworkRequester {
       'device_model': deviceModel,
       'os_name': osName,
       'os_version': osVersion,
-      'app_version': '${packageInfo.version}+${packageInfo.buildNumber}'
+      'app_version': '${packageInfo.version}+${packageInfo.buildNumber}',
+      'package_name': packageInfo.packageName,
+      'app_name': packageInfo.appName,
     };
   }
 
