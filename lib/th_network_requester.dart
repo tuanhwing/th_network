@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:convert';
 
+import 'package:app_set_id/app_set_id.dart';
 import 'package:curl_logger_dio_interceptor/curl_logger_dio_interceptor.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
@@ -119,22 +120,20 @@ class THNetworkRequester {
 
   Future<void> _initializationDeviceInfo() async {
     DeviceInfoPlugin deviceInfoPlugin = DeviceInfoPlugin();
+    String? uuid = await AppSetId().getIdentifier();
 
     String? deviceModel;
     String? osVersion;
     String? osName;
-    String? uuid;
     if (Platform.isIOS) {
       IosDeviceInfo iosDeviceInfo = await deviceInfoPlugin.iosInfo;
       deviceModel = iosDeviceInfo.model;
       osVersion = iosDeviceInfo.systemVersion;
-      uuid = iosDeviceInfo.identifierForVendor;// unique ID on iOS
       osName = 'iOS';
     } else if (Platform.isAndroid) {
       AndroidDeviceInfo androidDeviceInfo = await deviceInfoPlugin.androidInfo;
       deviceModel = androidDeviceInfo.model;
       osVersion = '${androidDeviceInfo.version.sdkInt}';
-      uuid = androidDeviceInfo.id;// unique ID on Android
       osName = 'Android';
     }
 
