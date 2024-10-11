@@ -127,7 +127,7 @@ class THNetworkRequester {
     String? osName;
     if (Platform.isIOS) {
       IosDeviceInfo iosDeviceInfo = await deviceInfoPlugin.iosInfo;
-      deviceModel = iosDeviceInfo.model;
+      deviceModel = iosDeviceInfo.utsname.machine;
       osVersion = iosDeviceInfo.systemVersion;
       osName = 'iOS';
     } else if (Platform.isAndroid) {
