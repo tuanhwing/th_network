@@ -14,7 +14,7 @@ dependencies:
   dio: ^4.0.6
   curl_logger_dio_interceptor: ^0.0.3
   device_info_plus: ^9.0.0
-  package_info_plus: ^4.0.0
+  package_info_plus: ^8.0.0
   app_set_id: ^1.2.0
   th_logger:
     git: https://github.com/tuanhwing/th_logger.git
