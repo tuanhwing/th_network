@@ -35,11 +35,11 @@ class THNetworkRequester {
   String? _baseUrl;
   Timer? _notifyListenerDebounce;
 
-  Timer? _refreshFutureDebounce;
   Completer? _refreshTokenCompleter;
   Future<THResponse<Map<String, dynamic>>>? _refreshTokenFuture;
 
   String languageCode = 'en';
+  int _unauthorizedRequestsCount = 0; /// Counter for unauthorized requests
 
   String? _token;
   String? _refreshToken;
@@ -156,13 +156,6 @@ class THNetworkRequester {
     }
   }
 
-  void _resetRefreshTokenFutureAfterFewSeconds() async {
-    if (_refreshFutureDebounce?.isActive ?? false) _refreshFutureDebounce?.cancel();
-    _refreshFutureDebounce = Timer(const Duration(seconds: 2), () {
-      _refreshTokenFuture = null;
-    });
-  }
-
   ///Initializes [THNetworkRequester] instance
   Future<void> initialize() async {
     //Check first running application
@@ -207,6 +200,7 @@ class THNetworkRequester {
 
     if (thResponse.code == HttpStatus.unauthorized && !path.endsWith(_logoutPath)) {
       try {
+        _unauthorizedRequestsCount++;
         if (_refreshTokenCompleter != null) {
           await _refreshTokenCompleter?.future;
         } else {
@@ -218,7 +212,14 @@ class THNetworkRequester {
         if (_refreshTokenCompleter?.isCompleted == false) {
           _refreshTokenCompleter?.complete();
         }
-        _resetRefreshTokenFutureAfterFewSeconds();
+
+        // Reset the future to allow new requests
+        _unauthorizedRequestsCount--;
+        if (_unauthorizedRequestsCount <= 0) {
+          _unauthorizedRequestsCount = 0;
+          _refreshTokenFuture = null;
+          _refreshTokenCompleter = null;
+        }
         Map<String, dynamic>? refreshTokenData = refreshTokenResponse.data;
         if (refreshTokenResponse.code == HttpStatus.ok &&
             refreshTokenData != null &&
