@@ -11,7 +11,7 @@ class THRequest {
   final Dio _dioClient;
 
   ///Handling errors
-  THResponse<T> _handlingErrors<T>(DioError? error) {
+  THResponse<T> _handlingErrors<T>(DioException? error) {
     if (error == null) {
       THLogger().e("_handlingErrors status:${error?.requestOptions} data:${error?.message}");
       return THResponse.somethingWentWrong();
@@ -21,17 +21,17 @@ class THRequest {
     THResponse<T> result = THResponse<T>();
 
     switch(error.type) {
-      case DioErrorType.receiveTimeout:
-      case DioErrorType.connectTimeout:
-      case DioErrorType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
         result.code = THErrorCodeClient.networkError;
         result.message = th_dependencies.tr(THErrorMessageKey.networkError);
         break;
-      case DioErrorType.other:
+      case DioExceptionType.unknown:
         result.code = THErrorCodeClient.somethingWentWrong;
         result.message = th_dependencies.tr(THErrorMessageKey.somethingWentWrong);
         break;
-      case DioErrorType.response:
+      case DioExceptionType.badResponse:
         result = THResponse<T>.fromJson(error.response!);
         break;
       default:
@@ -57,7 +57,7 @@ class THRequest {
       final response = await _dioClient.get(path, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
       return _parseResponse<T>(response);
     }
-    on DioError catch (error) {
+    on DioException catch (error) {
       return _handlingErrors(error);
     }
     catch(exception) {
@@ -72,7 +72,7 @@ class THRequest {
       final response = await _dioClient.post(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
       return _parseResponse<T>(response);
     }
-    on DioError catch (error) {
+    on DioException catch (error) {
       return _handlingErrors(error);
     }
     catch(exception) {
@@ -87,7 +87,7 @@ class THRequest {
       final response = await _dioClient.put(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
       return _parseResponse<T>(response);
     }
-    on DioError catch (error) {
+    on DioException catch (error) {
       return _handlingErrors(error);
     }
     catch(exception) {
@@ -102,7 +102,7 @@ class THRequest {
       final response = await _dioClient.delete(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
       return _parseResponse<T>(response);
     }
-    on DioError catch (error) {
+    on DioException catch (error) {
       return _handlingErrors(error);
     }
     catch(exception) {
@@ -117,7 +117,7 @@ class THRequest {
       final response = await _dioClient.patch(path, data: data, queryParameters: queryParameters, options: options, cancelToken: cancelToken);
       return _parseResponse<T>(response);
     }
-    on DioError catch (error) {
+    on DioException catch (error) {
       return _handlingErrors(error);
     }
     catch(exception) {

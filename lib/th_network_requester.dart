@@ -63,14 +63,14 @@ class THNetworkRequester {
     _baseUrl = baseURL;
     _logoutPath = logoutPath;
     // _dio.options.baseUrl = baseURL;
-    _dio.options.connectTimeout = connectTimeout;
-    _dio.options.receiveTimeout = receiveTimeout;
+    _dio.options.connectTimeout = Duration(milliseconds: connectTimeout);
+    _dio.options.receiveTimeout = Duration(milliseconds: receiveTimeout);
     _dio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
 
     //Instance to request the token.
     _tokenDio.options.baseUrl = baseURL;
-    _tokenDio.options.connectTimeout = connectTimeout;
-    _tokenDio.options.receiveTimeout = receiveTimeout;
+    _tokenDio.options.connectTimeout = Duration(milliseconds: connectTimeout);
+    _tokenDio.options.receiveTimeout = Duration(milliseconds: receiveTimeout);
     _tokenDio.interceptors.add(CurlLoggerDioInterceptor(printOnSuccess: true));
 
     _tokenDio.interceptors.add(InterceptorsWrapper(
@@ -85,7 +85,7 @@ class THNetworkRequester {
 
         return handler.next(response);
       },
-      onError: (DioError error, handler) {
+      onError: (DioException error, handler) {
         THLogger().d("[RefreshToken] DioError\ntype: ${error.type}\nmessage: ${error.message}\n\n"
             "RESPONSE\nstatusCode: ${error.response?.statusCode}\ndata: ${error.response?.data}");
 
@@ -105,7 +105,7 @@ class THNetworkRequester {
 
           return handler.next(response);
         },
-        onError: (DioError error, handler) {
+        onError: (DioException error, handler) {
           THLogger().d("DioError\ntype: ${error.type}\nmessage: ${error.message}\n\n"
               "REQUEST\npath: ${error.requestOptions.uri}\n"
               "RESPONSE\nstatusCode: ${error.response?.statusCode}\ndata: ${error.response?.data}");
