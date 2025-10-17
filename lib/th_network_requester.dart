@@ -47,6 +47,25 @@ class THNetworkRequester {
   String? get baseUrl => _baseUrl;
   Map<String, dynamic>? get deviceInfo => _deviceInfo;
 
+  /// Get current user id from token
+  String? get currentUserId {
+    if (_token == null) return null;
+
+    final parts = _token!.split('.');
+    if (parts.length != 3) {
+      return null;
+    }
+
+    final payload = parts[1];
+    var normalized = base64Url.normalize(payload);
+    var decoded = utf8.decode(base64Url.decode(normalized));
+    final Map<String, dynamic> payloadMap = json.decode(decoded);
+    if (payloadMap.containsKey('user_id')) {
+      return payloadMap['user_id'] as String?;
+    }
+    return null;
+  }
+
   String get _tokenPrefix => _authorizationPrefix.isNotEmpty ? '${_authorizationPrefix.trim()} ' : '';
 
   THNetworkRequester(String baseURL, this.storage, {
